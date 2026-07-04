@@ -1,0 +1,52 @@
+---
+// RelayLayout — 预览用基础布局，模拟 xivstrat 深色主题外观
+export interface Props {
+  title: string
+  dutyId?: string
+}
+
+const { title, dutyId } = Astro.props
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — xivstrat-relay</title>
+    <style>
+      /* 模拟 xivstrat 深色主题基础样式 */
+      body {
+        background-color: #0f172a; /* slate-900 */
+        color: #e2e8f0; /* slate-200 */
+        font-family: system-ui, -apple-system, sans-serif;
+        min-height: 100vh;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen antialiased">
+    <!-- 顶部导航条 — 模拟 xivstrat Navigation -->
+    <nav class="sticky top-0 z-50 border-b border-slate-700/50 bg-slate-900/95 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <a href="/" class="text-lg font-bold text-white hover:text-purple-400 transition-colors">
+          xivstrat-relay
+        </a>
+        <div class="flex items-center gap-2 text-sm text-slate-400">
+          {
+            dutyId && (
+              <span class="rounded bg-purple-500/20 px-2 py-0.5 text-purple-300 text-xs">
+                {dutyId}
+              </span>
+            )
+          }
+          <span class="rounded bg-amber-500/20 px-2 py-0.5 text-amber-300 text-xs">预览模式</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 内容区域 -->
+    <main class="mx-auto max-w-4xl px-4 py-8">
+      <slot />
+    </main>
+  </body>
+</html>

@@ -1,0 +1,305 @@
+---
+// DutyPhase.astro — 阶段页预览模板
+// 模拟 xivstrat 的 DutyStratLayout + Section 组件外观
+
+interface MechanicEvent {
+  id: string
+  start?: string
+  phase?: string
+  wavelengthStart?: string
+  getDownTimes?: string[]
+}
+
+interface CastEvent {
+  component: string
+  start?: string
+  time?: string
+}
+
+interface EventComponentEvent {
+  component: string
+  time: string
+}
+
+interface CastSectionEvent {
+  start: string
+  duration: number
+  ability: string
+  target?: boolean
+  damage?: number
+  damageType?: string
+  badges?: Array<{ variant: string; text: string }>
+}
+
+interface TimelineEvent {
+  type: 'event' | 'attack' | 'separator' | 'mechanic' | 'note' | 'cast' | 'eventComponent' | 'castSection'
+  time?: string
+  text?: string
+  damage?: number
+  damageType?: string
+  id?: string | null
+  title?: string
+  start?: string
+  component?: string
+  phase?: string
+  wavelengthStart?: string
+  getDownTimes?: string[]
+  duration?: number
+  ability?: string
+  target?: boolean
+  badges?: Array<{ variant: string; text: string }>
+}
+
+export interface Props {
+  duty: {
+    dutyId: string
+    meta: { cnName: string; enName: string }
+    translations?: Record<string, string>
+  }
+  phase: {
+    id: string
+    title: string
+    base: string
+    events: TimelineEvent[]
+  }
+  phases: Array<{ id: string; title: string }>
+}
+
+const { duty, phase, phases } = Astro.props
+const t = duty.translations || {}
+
+function formatDamageType(dt: string): string {
+  const map: Record<string, string> = {
+    physical: '物理',
+    magical: '魔法',
+    special: '特殊',
+  }
+  return map[dt] || dt
+}
+
+function getSeparatorColor(id: string | null): string {
+  if (!id) return 'border-slate-600'
+  const colors: Record<string, string> = {
+    'deep-cut': 'border-red-500',
+    'flip-to-x-side': 'border-amber-500',
+    'disco-infernal': 'border-pink-500',
+    'funky-floor': 'border-orange-500',
+    'inside-out-or-outside-in': 'border-cyan-500',
+    'arcady-night-fever': 'border-purple-500',
+    'lets-dance': 'border-yellow-500',
+    'lets-pose': 'border-green-500',
+    'ride-the-waves': 'border-blue-500',
+    'frogtourage': 'border-emerald-500',
+    'arcady-night-encore': 'border-violet-500',
+    'lets-dance-remix': 'border-rose-500',
+    'hi-nrg-fever': 'border-fuchsia-500',
+  }
+  return colors[id] || 'border-slate-600'
+}
+---
+
+<div class="space-y-6">
+  <!-- 标题区 -->
+  <header class="border-b border-slate-700 pb-6">
+    <div class="flex items-center gap-3">
+      <a
+        href={`/preview/${duty.dutyId}`}
+        class="text-slate-400 hover:text-white transition-colors"
+        title="返回副本首页"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </a>
+      <div>
+        <h1 class="text-2xl font-bold text-white">{phase.title}</h1>
+        <p class="text-sm text-slate-400">{duty.meta.cnName} · base: {phase.base}</p>
+      </div>
+    </div>
+
+    <!-- 阶段导航 tabs -->
+    <div class="mt-4 flex flex-wrap gap-2">
+      <a
+        href={`/preview/${duty.dutyId}`}
+        class="rounded-lg border border-slate-600 px-4 py-1.5 text-sm text-slate-400 hover:border-slate-500 hover:text-white transition-colors"
+      >
+        首页
+      </a>
+      {phases.map((p) => (
+        <a
+          href={`/preview/${duty.dutyId}/${p.id}`}
+          class={`rounded-lg border px-4 py-1.5 text-sm font-medium transition-colors ${
+            p.id === phase.id
+              ? 'border-purple-400 bg-purple-500/20 text-purple-300'
+              : 'border-slate-600 text-slate-400 hover:border-slate-500 hover:text-white'
+          }`}
+        >
+          {p.title}
+        </a>
+      ))}
+    </div>
+  </header>
+
+  <!-- 时间轴事件列表 -->
+  <div class="space-y-2">
+    {
+      phase.events.map((evt, idx) => {
+        switch (evt.type) {
+          case 'attack':
+            return (
+              <div class="flex items-center gap-3 rounded-lg border border-slate-700/50 bg-slate-800/30 px-4 py-2.5">
+                <span class="flex-shrink-0 rounded bg-slate-700 px-2 py-0.5 text-xs font-mono text-slate-300">
+                  {evt.time}
+                </span>
+                <span class="text-red-400 font-medium text-sm">⚔ 伤害 {evt.damage?.toLocaleString()}</span>
+                <span class="text-xs text-slate-500">{formatDamageType(evt.damageType || 'physical')}</span>
+              </div>
+            )
+
+          case 'event':
+            return (
+              <div class="flex items-start gap-3 rounded-lg border border-slate-700/50 bg-slate-800/30 px-4 py-2.5">
+                <span class="flex-shrink-0 rounded bg-slate-700 px-2 py-0.5 text-xs font-mono text-slate-300 mt-0.5">
+                  {evt.time}
+                </span>
+                <div class="text-sm text-slate-200">
+                  {evt.id && (
+                    <span class="text-xs text-purple-400 mr-1">#{evt.id}</span>
+                  )}
+                  {evt.text}
+                </div>
+              </div>
+            )
+
+          case 'separator':
+            return (
+              <div class={`flex items-center gap-3 border-l-4 ${getSeparatorColor(evt.id ?? null)} bg-slate-800/40 px-4 py-3 ${evt.title ? 'mt-6' : ''}`}>
+                {evt.id && (
+                  <span class="text-xs text-slate-500 font-mono">#{evt.id}</span>
+                )}
+                <span class="text-lg font-bold text-white">{evt.title || '—'}</span>
+              </div>
+            )
+
+          case 'mechanic': {
+            const mech = evt as TimelineEvent & { id: string }
+            return (
+              <div class="rounded-lg border-2 border-purple-500/30 bg-purple-500/5 px-4 py-3">
+                <div class="flex items-center gap-2 mb-1">
+                  <svg class="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <span class="text-sm font-bold text-purple-300">{mech.id}</span>
+                  {mech.start && (
+                    <span class="text-xs font-mono text-purple-400/60">{mech.start}</span>
+                  )}
+                </div>
+                <div class="text-xs text-purple-400/50 mt-1">
+                  🧩 交互式机制块 — 导出后引用 _mechanics/{mech.id}.astro
+                </div>
+                {mech.getDownTimes && (
+                  <div class="mt-2 flex flex-wrap gap-1">
+                    {mech.getDownTimes.map((t: string) => (
+                      <span class="rounded bg-purple-500/10 px-1.5 py-0.5 text-xs font-mono text-purple-400/70">{t}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          case 'note':
+            return (
+              <div class="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5">
+                <div class="flex items-start gap-2">
+                  <span class="text-amber-400 mt-0.5">💡</span>
+                  <p class="text-sm text-amber-200/80">{evt.text}</p>
+                </div>
+              </div>
+            )
+
+          case 'cast': {
+            const castEvt = evt as TimelineEvent & { component: string }
+            return (
+              <div class="flex items-center gap-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-4 py-2.5">
+                <svg class="h-4 w-4 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span class="text-sm font-medium text-cyan-300">{castEvt.component}</span>
+                <span class="text-xs font-mono text-cyan-400/60">
+                  {castEvt.start ? `start: ${castEvt.start}` : castEvt.time ? `time: ${castEvt.time}` : ''}
+                </span>
+                <span class="text-xs text-cyan-500/50 ml-auto">📋 Cast 组件</span>
+              </div>
+            )
+          }
+
+          case 'eventComponent': {
+            const ecEvt = evt as TimelineEvent & { component: string; time: string }
+            return (
+              <div class="flex items-center gap-3 rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-2.5">
+                <svg class="h-4 w-4 text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span class="text-sm font-medium text-blue-300">{ecEvt.component}</span>
+                <span class="text-xs font-mono text-blue-400/60">{ecEvt.time}</span>
+                <span class="text-xs text-blue-500/50 ml-auto">📋 Event 组件</span>
+              </div>
+            )
+          }
+
+          case 'castSection': {
+            const csEvt = evt as TimelineEvent & { start: string; duration: number; ability: string; damage?: number; damageType?: string; badges?: Array<{ variant: string; text: string }> }
+            return (
+              <div class="rounded-lg border border-fuchsia-500/20 bg-fuchsia-500/5 px-4 py-3">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-sm font-bold text-fuchsia-300">{csEvt.ability}</span>
+                  <span class="text-xs font-mono text-fuchsia-400/60">{csEvt.start}</span>
+                  <span class="text-xs text-fuchsia-400/60">⏱ {csEvt.duration}s</span>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-1">
+                  {csEvt.target && (
+                    <span class="rounded bg-fuchsia-500/10 px-2 py-0.5 text-xs text-fuchsia-300/70">🎯 目标</span>
+                  )}
+                  {csEvt.damage && (
+                    <span class="rounded bg-red-500/10 px-2 py-0.5 text-xs text-red-300/70">
+                      💥 {csEvt.damage.toLocaleString()} {csEvt.damageType}
+                    </span>
+                  )}
+                  {csEvt.badges?.map((b) => (
+                    <span class={`rounded px-2 py-0.5 text-xs font-bold ${
+                      b.variant === 'fuchsia' ? 'bg-fuchsia-500/20 text-fuchsia-300' :
+                      b.variant === 'red' ? 'bg-red-500/20 text-red-300' :
+                      'bg-slate-500/20 text-slate-300'
+                    }`}>
+                      {b.text}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )
+          }
+
+          default:
+            return null
+        }
+      })
+    }
+  </div>
+
+  <!-- 阶段导航底部 -->
+  <div class="border-t border-slate-700 pt-6 mt-8">
+    <div class="flex items-center justify-between">
+      <a
+        href={`/preview/${duty.dutyId}`}
+        class="text-sm text-slate-400 hover:text-white transition-colors flex items-center gap-1"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        返回副本首页
+      </a>
+      <span class="text-xs text-slate-600">预览模式 · xivstrat-relay</span>
+    </div>
+  </div>
+</div>

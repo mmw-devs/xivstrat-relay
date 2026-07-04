@@ -1,0 +1,13 @@
+---
+// 预览路由：/preview/07/m5s/p3 — P3 Finale
+import RelayLayout from '../../../../layouts/RelayLayout.astro'
+import DutyPhase from '../../../../templates/DutyPhase.astro'
+import dutyData from '../../../../data/duties/07/m5s.json'
+
+const phaseData = dutyData.phases.find((p) => p.id === 'p3')!
+const phases = dutyData.phases.map((p) => ({ id: p.id, title: p.title }))
+---
+
+<RelayLayout title={`${phaseData.title} — ${dutyData.meta.cnName}`} dutyId={dutyData.dutyId}>
+  <DutyPhase duty={dutyData} phase={phaseData} phases={phases} />
+</RelayLayout>

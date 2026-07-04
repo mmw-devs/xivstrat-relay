@@ -1,0 +1,12 @@
+---
+// 预览路由：/preview/07/m5s — m5s 副本首页
+import RelayLayout from '../../../layouts/RelayLayout.astro'
+import DutyIndex from '../../../templates/DutyIndex.astro'
+import dutyData from '../../../data/duties/07/m5s.json'
+
+const phases = dutyData.phases.map((p) => ({ id: p.id, title: p.title }))
+---
+
+<RelayLayout title={dutyData.meta.cnName} dutyId={dutyData.dutyId}>
+  <DutyIndex duty={dutyData} phases={phases} />
+</RelayLayout>
