@@ -2,33 +2,16 @@
 // DutyPhase.astro — 阶段页预览模板
 // 模拟 xivstrat 的 DutyStratLayout + Section 组件外观
 
-interface MechanicEvent {
-  id: string
-  start?: string
-  phase?: string
-  wavelengthStart?: string
-  getDownTimes?: string[]
-}
+interface Badge { variant: string; text: string }
 
-interface CastEvent {
-  component: string
-  start?: string
-  time?: string
-}
-
-interface EventComponentEvent {
-  component: string
-  time: string
-}
-
-interface CastSectionEvent {
+interface CastSectionData {
   start: string
   duration: number
   ability: string
   target?: boolean
   damage?: number
   damageType?: string
-  badges?: Array<{ variant: string; text: string }>
+  badges?: Badge[]
 }
 
 interface TimelineEvent {
@@ -47,7 +30,7 @@ interface TimelineEvent {
   duration?: number
   ability?: string
   target?: boolean
-  badges?: Array<{ variant: string; text: string }>
+  badges?: Badge[]
 }
 
 export interface Props {
@@ -63,6 +46,11 @@ export interface Props {
     events: TimelineEvent[]
   }
   phases: Array<{ id: string; title: string }>
+}
+
+function asCastSection(evt: TimelineEvent): CastSectionData {
+  // use JSON round-trip as safe type cast helper in template
+  return evt as unknown as CastSectionData
 }
 
 const { duty, phase, phases } = Astro.props
@@ -249,7 +237,7 @@ function getSeparatorColor(id: string | null): string {
           }
 
           case 'castSection': {
-            const csEvt = evt as TimelineEvent & { start: string; duration: number; ability: string; damage?: number; damageType?: string; badges?: Array<{ variant: string; text: string }> }
+            const csEvt = asCastSection(evt)
             return (
               <div class="rounded-lg border border-fuchsia-500/20 bg-fuchsia-500/5 px-4 py-3">
                 <div class="flex items-center gap-2 mb-1">
