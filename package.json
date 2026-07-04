@@ -1,0 +1,19 @@
+{
+  "name": "xivstrat-relay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "xivstrat 攻略站内容中转编辑 + 预览 + 导出",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "export": "node src/scripts/export.mjs"
+  },
+  "dependencies": {
+    "astro": "6.1.5",
+    "@astrojs/vue": "^6.0.0",
+    "vue": "3.5.32",
+    "@tailwindcss/vite": "^4.0.0"
+  },
+  "packageManager": "pnpm@10.33.0"
+}
