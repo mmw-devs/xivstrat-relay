@@ -1,18 +1,125 @@
 ---
-// xivstrat-relay — 中转站入口（占位，后续替换为副本导航页）
+// xivstrat-relay 入口 — 副本列表导航
+import RelayLayout from '../layouts/RelayLayout.astro'
+
+// 静态引入所有 duty JSON
+const dutyModules = import.meta.glob('../data/duties/**/*.json', { eager: true })
+
+interface DutyMeta {
+  dutyId: string
+  meta: { cnName: string; enName: string; videoLink?: string }
+  phases: Array<{ id: string; title: string }>
+}
+
+const duties: DutyMeta[] = Object.entries(dutyModules).map(([filePath, mod]) => {
+  const data = (mod as { default: DutyMeta }).default || (mod as DutyMeta)
+  // 从路径提取 duty path，如 '../data/duties/07/m5s.json' → '07/m5s'
+  const match = filePath.match(/\/data\/duties\/(.+)\.json$/)
+  const pathKey = match ? match[1] : data.dutyId
+  return { ...data, pathKey }
+})
+
+// 按版本分组
+const groups: Record<string, DutyMeta[]> = {}
+for (const d of duties) {
+  const tier = d.dutyId.split('/')[0]
+  if (!groups[tier]) groups[tier] = []
+  groups[tier].push(d)
+}
 ---
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>xivstrat-relay</title>
-  </head>
-  <body style="font-family:system-ui;display:grid;place-items:center;min-height:100vh;color:#666">
-    <div style="text-align:center">
-      <h1 style="font-size:24px;margin-bottom:8px">xivstrat-relay</h1>
-      <p>中转站就绪。后续在此页展示副本列表导航。</p>
-      <p style="font-size:13px;margin-top:16px">计划：<code>src/pages/index.astro</code> → 副本导航</p>
-      <p style="font-size:13px">预览：<code>/preview/07/m5s/p1</code></p>
-    </div>
-  </body>
-</html>
+
+<RelayLayout title="xivstrat-relay · 副本列表">
+  <div class="space-y-8">
+    <header class="text-center border-b border-slate-700 pb-6">
+      <h1 class="text-3xl font-bold text-white">xivstrat-relay</h1>
+      <p class="mt-2 text-slate-400">攻略站内容中转编辑 · 预览 & 导出</p>
+      <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-4 py-1.5 text-sm text-amber-300">
+        <span class="inline-block h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+        编辑 JSON → 预览 → 导出 .astro → 复制到 xivstrat
+      </div>
+    </header>
+
+    {
+      Object.entries(groups).sort(([a], [b]) => a.localeCompare(b)).map(([tier, tierDuties]) => (
+        <section>
+          <h2 class="text-lg font-semibold text-slate-300 mb-4 flex items-center gap-2">
+            <span class="rounded bg-purple-500/20 px-2 py-0.5 text-xs text-purple-300 font-mono">
+              Tier {tier}
+            </span>
+            <span class="text-slate-500 text-sm">{tierDuties.length} 个副本</span>
+          </h2>
+          <div class="grid gap-3 sm:grid-cols-2">
+            {
+              tierDuties.map((d) => (
+                <a
+                  href={`/preview/${d.dutyId}`}
+                  class="group block rounded-xl border border-slate-700 bg-slate-800/50 p-5 hover:border-purple-500/50 hover:bg-slate-800/80 transition-all"
+                >
+                  <div class="flex items-start justify-between">
+                    <div class="min-w-0">
+                      <h3 class="font-bold text-white group-hover:text-purple-300 transition-colors truncate">
+                        {d.meta.cnName}
+                      </h3>
+                      <p class="text-sm text-slate-500 mt-0.5 truncate">{d.meta.enName}</p>
+                    </div>
+                    <span class="flex-shrink-0 rounded bg-slate-700 px-2 py-0.5 text-xs font-mono text-slate-400 ml-3">
+                      {d.dutyId}
+                    </span>
+                  </div>
+
+                  <div class="mt-4 flex flex-wrap items-center gap-2">
+                    <!-- 阶段标签 -->
+                    {
+                      d.phases.map((p) => (
+                        <a
+                          href={`/preview/${d.dutyId}/${p.id}`}
+                          class="rounded-md border border-slate-600 px-2 py-1 text-xs text-slate-400 hover:border-purple-400 hover:text-purple-300 transition-colors"
+                        >
+                          {p.id}
+                        </a>
+                      ))
+                    }
+                    <a
+                      href={`/preview/${d.dutyId}`}
+                      class="rounded-md border border-slate-600 px-2 py-1 text-xs text-slate-400 hover:border-cyan-400 hover:text-cyan-300 transition-colors"
+                    >
+                      首页
+                    </a>
+                  </div>
+
+                  <div class="mt-3 flex items-center gap-3 text-xs text-slate-600">
+                    <span class="flex items-center gap-1">
+                      <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                      JSON 数据驱动
+                    </span>
+                    <span>·</span>
+                    <span class="flex items-center gap-1">
+                      <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                      pnpm export
+                    </span>
+                  </div>
+                </a>
+              ))
+            }
+          </div>
+        </section>
+      ))
+    }
+
+    {
+      duties.length === 0 && (
+        <div class="text-center py-16 text-slate-500">
+          <svg class="mx-auto h-12 w-12 mb-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+          <p class="text-lg">暂无副本数据</p>
+          <p class="text-sm mt-2">在 <code class="rounded bg-slate-800 px-1.5 py-0.5 text-xs">src/data/duties/</code> 添加 JSON 文件即可</p>
+        </div>
+      )
+    }
+
+    <footer class="border-t border-slate-700 pt-6 text-center text-xs text-slate-600">
+      <p>编辑 <code class="rounded bg-slate-800 px-1 py-0.5">src/data/duties/&lt;副本&gt;.json</code> → <code class="rounded bg-slate-800 px-1 py-0.5">pnpm dev</code> 预览 → <code class="rounded bg-slate-800 px-1 py-0.5">pnpm export</code> 导出</p>
+    </footer>
+  </div>
+</RelayLayout>
