@@ -1,0 +1,18 @@
+version: 1
+allowlistPaths:
+  - "src/data/**"
+denylistPaths:
+  - "AGENTS.md"
+  - "AGENT.md"
+  - ".github/**"
+  - "package.json"
+  - "pnpm-lock.yaml"
+branchPrefix: "content/"
+preflight:
+  cmd: "pnpm build"
+  timeoutSeconds: 300
+bootstrap:
+  cmd: "pnpm install --frozen-lockfile"
+  whenMissing: "node_modules"
+  timeoutSeconds: 600
+prDefaultDraft: true
